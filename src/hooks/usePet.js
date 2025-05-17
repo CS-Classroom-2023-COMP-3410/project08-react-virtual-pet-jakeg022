@@ -12,16 +12,23 @@ const INITIAL_STATS = {
 export default function usePet() {
   const [petState, setPetState] = useState(() => {
     const saved = localStorage.getItem('petState');
-    return saved
-      ? JSON.parse(saved)
-      : {
-          stats: { ...INITIAL_STATS },
-          birthDate: Date.now(),
-          activity: null,
-          lastInteraction: Date.now(),
-          lastVisited: Date.now(),
-          sleepCount: 0,
-        };
+    try {
+      const parsed = saved ? JSON.parse(saved) : null;
+      if (parsed && parsed.stats) {
+        return parsed;
+      }
+    } catch {
+      // invalid JSON
+    }
+    return {
+      stats: { ...INITIAL_STATS },
+      birthDate: Date.now(),
+      activity: null,
+      lastInteraction: Date.now(),
+      lastVisited: Date.now(),
+      sleepCount: 0,
+    };
+
   });
 
   function updateStats(changes) {
