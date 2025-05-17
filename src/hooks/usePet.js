@@ -12,14 +12,23 @@ const INITIAL_STATS = {
 export default function usePet() {
   const [petState, setPetState] = useState(() => {
     const saved = localStorage.getItem('petState');
-    try {
-      const parsed = saved ? JSON.parse(saved) : null;
-      if (parsed && parsed.stats) {
-        return parsed;
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+
+        const isValidStats = parsed?.stats &&
+          ['hunger', 'energy', 'happiness', 'health', 'cleanliness', 'bond']
+            .every(key => typeof parsed.stats[key] === 'number');
+
+        if (isValidStats) {
+          return parsed;
+        }
+      } catch {
+        // corrupted JSON — fall through to default
       }
-    } catch {
-      // invalid JSON
     }
+
     return {
       stats: { ...INITIAL_STATS },
       birthDate: Date.now(),
@@ -28,14 +37,17 @@ export default function usePet() {
       lastVisited: Date.now(),
       sleepCount: 0,
     };
-
   });
 
   function updateStats(changes) {
     setPetState(prev => ({
       ...prev,
       stats: Object.fromEntries(
-        Object.entries(prev.stats).map(([k, v]) => [k, Math.min(100, Math.max(0, v + (changes[k] || 0)))])
+        Object.entries(prev.stats).map(([key, value]) => {
+          const delta = changes[key] || 0;
+          const newValue = Math.min(100, Math.max(0, value + delta));
+          return [key, newValue];
+        })
       ),
       lastInteraction: Date.now(),
       lastVisited: Date.now(),
@@ -44,14 +56,11 @@ export default function usePet() {
 
   function doActivity(name, statChanges) {
     if (petState.activity === 'sleeping') return;
-    setPetState(prev => {
-      const updated = { ...prev, activity: name };
-      if (name === 'cleaning') updated.cleanCount = (prev.cleanCount || 0) + 1;
-      if (name === 'playing') updated.playCount = (prev.playCount || 0) + 1;
-      return updated;
-    });
+    setPetState(prev => ({ ...prev, activity: name }));
     updateStats(statChanges);
-    setTimeout(() => setPetState(prev => ({ ...prev, activity: null })), 3000);
+    setTimeout(() => {
+      setPetState(prev => ({ ...prev, activity: null }));
+    }, 3000);
   }
 
   return { petState, setPetState, updateStats, doActivity };
