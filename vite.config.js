@@ -1,16 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  base: '/project08-react-virtual-pet-jakeg022/', 
   plugins: [react()],
-  server: {
-    host: true, 
-    port: 5173,
-    strictPort: true,
-    open: true
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true
-  }
-})
+});
